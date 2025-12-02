@@ -90,6 +90,34 @@ export default async function BlogPost({ params }: { params: { slug: string } })
           <p className="text-xs text-slate-500 mt-6">Partecipiamo al Programma Affiliazione Amazon EU.</p>
         </div>
       )}
+      <script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org/",
+      "@type": "Product",
+      "name": post.title.replace('Recensione:', '').trim(),
+      "image": post.image_url,
+      "description": post.meta_description,
+      "brand": {
+        "@type": "Brand",
+        "name": post.brand || "Generic"
+      },
+      "review": {
+        "@type": "Review",
+        "reviewRating": {
+          "@type": "Rating",
+          "ratingValue": "4.5", // Potresti chiedere all'AI di generare un voto numerico
+          "bestRating": "5"
+        },
+        "author": {
+          "@type": "Organization",
+          "name": "Monitor Finder Team"
+        }
+      }
+    })
+  }}
+/>
     </article>
   )
 }
