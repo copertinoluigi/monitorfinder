@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next'
 import { supabase } from '@/lib/supabase'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://modulofinder.it' // CAMBIA QUESTO col dominio finale
+  const baseUrl = 'https://monitorfinder.it' // CAMBIA QUESTO col dominio finale
 
   // 1. Prendi tutti gli slug dei post
   const { data: posts } = await supabase
