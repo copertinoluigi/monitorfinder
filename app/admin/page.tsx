@@ -42,11 +42,12 @@ function SidebarBtn({ active, onClick, icon, label }: any) {
   )
 }
 
-/* --- TAB 1: GENERATORE MONITOR --- */
+/* --- TAB 1: GENERATORE MONITOR (Versione Input Libero) --- */
 function GeneratorTab() {
+  // Ho rimosso 'LG' come default, ora parte vuoto
   const [form, setForm] = useState({ 
     title: '', features: '', link: '', imgUrl: '', password: '',
-    price: '', brand: 'LG', hertz: '', category: 'Gaming' 
+    price: '', brand: '', hertz: '', category: 'Gaming' 
   })
   const [status, setStatus] = useState('')
 
@@ -61,9 +62,8 @@ function GeneratorTab() {
           features: form.features, 
           amazonLink: form.link,
           image: form.imgUrl,
-          // Mapping Dati Monitor
           price: Number(form.price),
-          brand: form.brand,        
+          brand: form.brand,         // Testo libero
           hertz: Number(form.hertz), 
           category: form.category
         })
@@ -71,8 +71,8 @@ function GeneratorTab() {
       const data = await res.json()
       if (data.success) {
         setStatus('✅ Recensione generata e monitor indicizzato!')
-        // Reset parziale
-        setForm(prev => ({ ...prev, title: '', features: '', link: '', imgUrl: '', price: '', hertz: '' }))
+        // Reset parziale (manteniamo password e category per comodità)
+        setForm(prev => ({ ...prev, title: '', features: '', link: '', imgUrl: '', price: '', hertz: '', brand: '' }))
       } else { 
         setStatus(`❌ Errore: ${data.error}`) 
       }
@@ -107,10 +107,14 @@ function GeneratorTab() {
           </div>
           <div>
             <label className="font-bold text-sm block mb-1">Brand</label>
-            <input type="text" className="w-full border p-2 rounded" value={form.brand} onChange={e => setForm({...form, brand: e.target.value})} placeholder="Samsung" list="brands"/>
-            <datalist id="brands">
-                <option value="LG"/><option value="Samsung"/><option value="ASUS"/><option value="MSI"/><option value="Dell"/><option value="BenQ"/>
-            </datalist>
+            {/* INPUT DI TESTO SEMPLICE */}
+            <input 
+              type="text" 
+              className="w-full border p-2 rounded" 
+              value={form.brand} 
+              onChange={e => setForm({...form, brand: e.target.value})} 
+              placeholder="Es. Samsung, BenQ..." 
+            />
           </div>
           <div className="col-span-3">
              <label className="font-bold text-sm block mb-1">Categoria</label>
