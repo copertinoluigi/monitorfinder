@@ -1,12 +1,11 @@
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import HeroCarousel from '@/components/features/HeroCarousel'
-import { Monitor, Zap, ShieldCheck, Search, ArrowRight, Cpu } from 'lucide-react'
+import { Monitor, Zap, ShieldCheck, Search, Cpu } from 'lucide-react'
 
 export const revalidate = 0 
 
 export default async function Homepage() {
-  // 1. Fetch Ultimi 5 Post per il Carosello
   const { data: latestPosts } = await supabase
     .from('posts')
     .select('id, title, slug, image_url, price, hertz, category')
@@ -18,28 +17,49 @@ export default async function Homepage() {
     <div className="overflow-hidden bg-slate-50">
       
       {/* 1. HERO SECTION STATICA */}
-      <section className="relative bg-slate-950 pt-16 pb-24 px-4 overflow-hidden">
-        {/* ... (Contenuto Hero invariato, Background etc) ... */}
+      {/* Aumentato pb-32 per dare spazio al carosello che sale */}
+      <section className="relative bg-slate-950 pt-20 pb-40 px-4 overflow-hidden">
+        
+        {/* Background Effects */}
+        <div className="absolute inset-0 opacity-20 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-blue-600/20 rounded-full blur-[120px] pointer-events-none"></div>
+
+        <div className="relative max-w-4xl mx-auto text-center space-y-8 z-10">
            
-           {/* Titoli e testi Hero... */}
-           <div className="relative max-w-4xl mx-auto text-center space-y-6 z-10">
-               {/* ... (lascia tutto uguale qui) ... */}
-               <h1 className="text-3xl md:text-6xl font-black text-white tracking-tight leading-tight"> {/* Ho ridotto leggermente il font mobile */}
-                  Scegli il Monitor <br className="hidden md:block"/>
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-                    Senza Compromessi.
-                  </span>
-               </h1>
-               {/* ... */}
+           <div className="inline-flex items-center gap-2 bg-blue-900/30 border border-blue-500/30 text-blue-300 px-4 py-1.5 rounded-full text-sm font-medium backdrop-blur-sm">
+              <Cpu size={14} /> Database aggiornato oggi
            </div>
+           
+           <h1 className="text-4xl md:text-7xl font-black text-white tracking-tight leading-tight">
+              Scegli il Monitor <br className="hidden md:block"/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+                Senza Compromessi.
+              </span>
+           </h1>
+           
+           {/* QUESTO ERA IL TESTO MANCANTE */}
+           <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
+              Analisi tecniche reali basate su IA. Confronta Hz, pannelli e prezzi per trovare il display perfetto per Gaming e Ufficio.
+           </p>
+
+           {/* QUESTI ERANO I BOTTONI MANCANTI */}
+           <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
+              <Link href="/finder" className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-lg font-bold px-8 py-4 rounded-xl transition transform hover:scale-105 shadow-lg shadow-blue-600/25">
+                 <Search size={20} /> Trova Monitor
+              </Link>
+              <Link href="/blog" className="flex items-center justify-center gap-2 bg-white/10 border border-white/10 hover:bg-white/20 text-white text-lg font-bold px-8 py-4 rounded-xl transition backdrop-blur-sm">
+                 Ultime Recensioni
+              </Link>
+           </div>
+        </div>
       </section>
 
-      {/* 2. CAROSELLO COMPACT */}
-      {/* Su mobile margine normale, su desktop sale un po' (-mt-16) per effetto sovrapposizione */}
-      <section className="relative z-20 mt-[-40px] md:mt-[-80px] mb-16">
+      {/* 2. CAROSELLO SLIM */}
+      {/* Sale di 100px sopra la Hero (-mt-24) */}
+      <section className="relative z-20 mt-[-100px] mb-20">
          <div className="text-center mb-2">
-            <span className="inline-block bg-slate-900 text-slate-400 text-[10px] font-bold px-3 py-1 rounded-t-lg border-t border-x border-slate-800 uppercase tracking-widest shadow-lg">
-               Appena Recensiti
+            <span className="inline-block bg-slate-900 text-slate-400 text-[10px] font-bold px-3 py-1 rounded-t-lg border-t border-x border-slate-800 uppercase tracking-widest shadow-xl">
+               In Evidenza
             </span>
          </div>
          <HeroCarousel posts={latestPosts || []} />
