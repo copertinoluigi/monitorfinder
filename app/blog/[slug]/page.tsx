@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import { ShoppingCart, Zap, Monitor } from 'lucide-react'
+// IMPORTA IL COMPONENTE
+import ShareButtons from '@/components/features/ShareButtons'
 
 // Metadata Dinamici
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
@@ -29,7 +31,7 @@ export default async function BlogPost({ params }: { params: { slug: string } })
     <article className="max-w-4xl mx-auto px-4 py-12">
       
       {/* 1. HEADER PRODOTTO */}
-      <div className="text-center mb-10">
+      <div className="text-center mb-8">
         <span className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-bold mb-4 uppercase tracking-wide">
             {post.category || 'Recensione Tech'}
         </span>
@@ -37,7 +39,7 @@ export default async function BlogPost({ params }: { params: { slug: string } })
           {post.title.replace('Recensione:', '')}
         </h1>
 
-        {/* TECH SPECS BADGE (Opzionale se presenti nel DB) */}
+        {/* TECH SPECS BADGE */}
         <div className="flex justify-center gap-4 mb-8">
              {post.hertz && (
                  <div className="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-lg border border-slate-200">
@@ -64,6 +66,9 @@ export default async function BlogPost({ params }: { params: { slug: string } })
             />
           </div>
         )}
+
+        {/* --- TASTI SHARE (Inseriti Qui) --- */}
+        <ShareButtons slug={post.slug} title={post.title} />
       </div>
 
       {/* 2. CONTENUTO AI */}
@@ -90,34 +95,36 @@ export default async function BlogPost({ params }: { params: { slug: string } })
           <p className="text-xs text-slate-500 mt-6">Partecipiamo al Programma Affiliazione Amazon EU.</p>
         </div>
       )}
+      
+      {/* DATI STRUTTURATI SEO */}
       <script
-  type="application/ld+json"
-  dangerouslySetInnerHTML={{
-    __html: JSON.stringify({
-      "@context": "https://schema.org/",
-      "@type": "Product",
-      "name": post.title.replace('Recensione:', '').trim(),
-      "image": post.image_url,
-      "description": post.meta_description,
-      "brand": {
-        "@type": "Brand",
-        "name": post.brand || "Generic"
-      },
-      "review": {
-        "@type": "Review",
-        "reviewRating": {
-          "@type": "Rating",
-          "ratingValue": "4.5", // Potresti chiedere all'AI di generare un voto numerico
-          "bestRating": "5"
-        },
-        "author": {
-          "@type": "Organization",
-          "name": "Monitor Finder Team"
-        }
-      }
-    })
-  }}
-/>
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+            "@context": "https://schema.org/",
+            "@type": "Product",
+            "name": post.title.replace('Recensione:', '').trim(),
+            "image": post.image_url,
+            "description": post.meta_description,
+            "brand": {
+                "@type": "Brand",
+                "name": post.brand || "Generic"
+            },
+            "review": {
+                "@type": "Review",
+                "reviewRating": {
+                "@type": "Rating",
+                "ratingValue": "4.5",
+                "bestRating": "5"
+                },
+                "author": {
+                "@type": "Organization",
+                "name": "Monitor Finder Team"
+                }
+            }
+            })
+        }}
+      />
     </article>
   )
 }
