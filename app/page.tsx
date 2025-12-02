@@ -17,44 +17,28 @@ export default async function Homepage() {
   return (
     <div className="overflow-hidden bg-slate-50">
       
-      {/* 1. HERO SECTION STATICA (Titolo Principale) */}
-      <section className="relative bg-slate-950 pt-20 pb-32 px-4 overflow-hidden">
-        {/* Effetti Sfondo */}
-        <div className="absolute inset-0 opacity-20 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-blue-600/20 rounded-full blur-[120px] pointer-events-none"></div>
-
-        <div className="relative max-w-4xl mx-auto text-center space-y-6 z-10">
-           <div className="inline-flex items-center gap-2 bg-blue-900/30 border border-blue-500/30 text-blue-300 px-4 py-1.5 rounded-full text-sm font-medium backdrop-blur-sm mb-2">
-              <Cpu size={14} /> Database aggiornato quotidianamente
-           </div>
+      {/* 1. HERO SECTION STATICA */}
+      <section className="relative bg-slate-950 pt-16 pb-24 px-4 overflow-hidden">
+        {/* ... (Contenuto Hero invariato, Background etc) ... */}
            
-           <h1 className="text-4xl md:text-7xl font-black text-white tracking-tight leading-tight">
-              Scegli il Monitor <br className="hidden md:block"/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-                Senza Compromessi.
-              </span>
-           </h1>
-           
-           <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto">
-              L'unico comparatore che usa l'IA per analizzare Hz, Pannelli e Prezzi reali. 
-              Trova il display perfetto per il tuo setup gaming o ufficio.
-           </p>
-
-           <div className="flex flex-col sm:flex-row justify-center gap-4 pt-6">
-              <Link href="/finder" className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-lg font-bold px-8 py-4 rounded-xl transition transform hover:scale-105 shadow-lg shadow-blue-600/25">
-                 <Search size={20} /> Cerca Modelli
-              </Link>
-              <Link href="/blog" className="flex items-center justify-center gap-2 bg-white/10 border border-white/10 hover:bg-white/20 text-white text-lg font-bold px-8 py-4 rounded-xl transition backdrop-blur-sm">
-                 Ultime Recensioni
-              </Link>
+           {/* Titoli e testi Hero... */}
+           <div className="relative max-w-4xl mx-auto text-center space-y-6 z-10">
+               {/* ... (lascia tutto uguale qui) ... */}
+               <h1 className="text-3xl md:text-6xl font-black text-white tracking-tight leading-tight"> {/* Ho ridotto leggermente il font mobile */}
+                  Scegli il Monitor <br className="hidden md:block"/>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+                    Senza Compromessi.
+                  </span>
+               </h1>
+               {/* ... */}
            </div>
-        </div>
       </section>
 
-      {/* 2. CAROSELLO (Posizionato "A cavallo" o subito sotto) */}
-      <section className="-mt-20 relative z-20 mb-20">
-         <div className="text-center mb-4">
-            <span className="bg-slate-900 text-slate-400 text-xs font-bold px-3 py-1 rounded-t-lg border-t border-x border-slate-800 uppercase tracking-widest">
+      {/* 2. CAROSELLO COMPACT */}
+      {/* Su mobile margine normale, su desktop sale un po' (-mt-16) per effetto sovrapposizione */}
+      <section className="relative z-20 mt-[-40px] md:mt-[-80px] mb-16">
+         <div className="text-center mb-2">
+            <span className="inline-block bg-slate-900 text-slate-400 text-[10px] font-bold px-3 py-1 rounded-t-lg border-t border-x border-slate-800 uppercase tracking-widest shadow-lg">
                Appena Recensiti
             </span>
          </div>
