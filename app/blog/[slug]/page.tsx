@@ -25,13 +25,13 @@ export default async function BlogPost({ params }: { params: { slug: string } })
 
   if (!post) notFound()
 
-  // Se è un post manuale, la grafica è più semplice (o uguale). Qui uso lo stesso template per coerenza.
-  const isProduct = post.show_in_finder // Se true, è un prodotto con specifiche
+  // Se 'show_in_finder' è true, è un prodotto. Altrimenti è un articolo manuale.
+  const isProduct = post.show_in_finder 
 
   return (
     <article className="min-h-screen bg-white">
       
-      {/* 1. HEADER HERO SECTION */}
+      {/* 1. HEADER HERO SECTION (DESIGN PRO) */}
       <div className="bg-slate-50 border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-4 py-12 md:py-20 flex flex-col md:flex-row items-center gap-12">
           
@@ -45,7 +45,7 @@ export default async function BlogPost({ params }: { params: { slug: string } })
               {post.title.replace('Recensione:', '').trim()}
             </h1>
 
-            {/* TECH GRID (Solo se prodotto) */}
+            {/* TECH GRID (Solo se è un Prodotto) */}
             {isProduct && (
               <div className="grid grid-cols-2 gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm max-w-md">
                  <div className="flex items-center gap-3">
@@ -67,7 +67,7 @@ export default async function BlogPost({ params }: { params: { slug: string } })
               </div>
             )}
 
-            {/* CTA TOP (Richiesta Punto 2) */}
+            {/* TOP CTA (Richiesta Punto 2) */}
             {post.amazon_link && (
                 <div className="pt-4">
                     <a href={post.amazon_link} target="_blank" rel="nofollow sponsored" className="inline-flex items-center gap-2 bg-[#FF9900] hover:bg-[#ff8c00] text-slate-900 font-bold px-6 py-3 rounded-xl shadow-md transition transform hover:scale-105">
