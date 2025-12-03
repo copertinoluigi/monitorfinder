@@ -2,23 +2,24 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/Button'
-import { Settings, MessageSquare, PenTool, Check, Save, Trash2, Scale, Monitor, Zap } from 'lucide-react'
+import { Settings, MessageSquare, PenTool, Check, Save, Trash2, Scale, Monitor, Zap, FileText } from 'lucide-react'
 
 // --- COMPONENTE PRINCIPALE ---
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<'generator' | 'settings' | 'comments' | 'legal'>('generator')
+  const [activeTab, setActiveTab] = useState<'generator' | 'manual' | 'settings' | 'comments' | 'legal'>('generator')
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col md:flex-row">
       {/* Sidebar */}
-      <aside className="w-full md:w-64 bg-slate-900 text-white p-6">
+      <aside className="w-full md:w-64 bg-slate-900 text-white p-6 sticky top-0 h-screen overflow-y-auto">
         <h2 className="text-2xl font-bold mb-8 text-blue-400 flex items-center gap-2">
           <Monitor size={24}/> Admin
         </h2>
-        <nav className="flex md:flex-col gap-4 overflow-x-auto md:overflow-visible pb-4 md:pb-0">
-          <SidebarBtn active={activeTab === 'generator'} onClick={() => setActiveTab('generator')} icon={<PenTool size={20}/>} label="Generatore AI" />
-          <SidebarBtn active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} icon={<Settings size={20}/>} label="Impostazioni" />
+        <nav className="flex md:flex-col gap-3">
+          <SidebarBtn active={activeTab === 'generator'} onClick={() => setActiveTab('generator')} icon={<Zap size={20}/>} label="Generatore AI" />
+          <SidebarBtn active={activeTab === 'manual'} onClick={() => setActiveTab('manual')} icon={<FileText size={20}/>} label="Post Manuale" />
           <SidebarBtn active={activeTab === 'comments'} onClick={() => setActiveTab('comments')} icon={<MessageSquare size={20}/>} label="Commenti" />
+          <SidebarBtn active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} icon={<Settings size={20}/>} label="Impostazioni" />
           <SidebarBtn active={activeTab === 'legal'} onClick={() => setActiveTab('legal')} icon={<Scale size={20}/>} label="Legal" />
         </nav>
       </aside>
@@ -26,6 +27,7 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <main className="flex-1 p-4 md:p-8 overflow-y-auto">
         {activeTab === 'generator' && <GeneratorTab />}
+        {activeTab === 'manual' && <ManualPostTab />}
         {activeTab === 'settings' && <SettingsTab />}
         {activeTab === 'comments' && <CommentsTab />}
         {activeTab === 'legal' && <LegalTab />}
@@ -42,17 +44,17 @@ function SidebarBtn({ active, onClick, icon, label }: any) {
   )
 }
 
-/* --- TAB 1: GENERATORE MONITOR (Versione Input Libero) --- */
+/* --- TAB 1: GENERATORE AI (Aggiornato con Filtri Pollici/Risoluzione) --- */
 function GeneratorTab() {
-  // Ho rimosso 'LG' come default, ora parte vuoto
   const [form, setForm] = useState({ 
     title: '', features: '', link: '', imgUrl: '', password: '',
-    price: '', brand: '', hertz: '', category: 'Gaming' 
+    price: '', brand: '', hertz: '', category: 'Gaming',
+    screenSize: '', resolution: '' // NUOVI CAMPI
   })
   const [status, setStatus] = useState('')
 
   const handleGenerate = async () => {
-    setStatus('🤖 Analisi specifiche hardware in corso...')
+    setStatus('🤖 AI al lavoro...')
     try {
       const res = await fetch('/api/generate-post', {
         method: 'POST',
@@ -60,19 +62,24 @@ function GeneratorTab() {
         body: JSON.stringify({ 
           productTitle: form.title, 
           features: form.features, 
-          amazonLink: form.link,
+          amazonLink: form.link, 
           image: form.imgUrl,
-          price: Number(form.price),
-          brand: form.brand,         // Testo libero
+          price: Number(form.price), 
+          brand: form.brand, 
           hertz: Number(form.hertz), 
-          category: form.category
+          category: form.category,
+          screenSize: form.screenSize, // INVIATI ALL'API
+          resolution: form.resolution 
         })
       })
       const data = await res.json()
       if (data.success) {
         setStatus('✅ Recensione generata e monitor indicizzato!')
-        // Reset parziale (manteniamo password e category per comodità)
-        setForm(prev => ({ ...prev, title: '', features: '', link: '', imgUrl: '', price: '', hertz: '', brand: '' }))
+        // Reset dei campi (mantengo password e categoria per comodità)
+        setForm(prev => ({ 
+          ...prev, title: '', features: '', link: '', imgUrl: '', 
+          price: '', hertz: '', brand: '', screenSize: '', resolution: '' 
+        }))
       } else { 
         setStatus(`❌ Errore: ${data.error}`) 
       }
@@ -80,9 +87,9 @@ function GeneratorTab() {
   }
 
   return (
-    <div className="max-w-2xl bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+    <div className="max-w-3xl bg-white p-8 rounded-xl shadow-sm border border-slate-200">
       <h2 className="text-2xl font-bold mb-6 text-slate-800 flex items-center gap-2">
-        <Zap className="text-primary"/> Nuovo Monitor
+        <Zap className="text-primary"/> Generatore AI (Prodotto)
       </h2>
       <div className="space-y-4">
         
@@ -95,7 +102,7 @@ function GeneratorTab() {
           <div><label className="font-bold text-sm">URL Immagine</label><input className="w-full border p-3 rounded" value={form.imgUrl} onChange={e => setForm({...form, imgUrl: e.target.value})} /></div>
         </div>
 
-        {/* --- DATI TECNICI --- */}
+        {/* --- DATI TECNICI ESTESI --- */}
         <div className="grid grid-cols-3 gap-4 bg-blue-50 p-4 rounded-lg border border-blue-100">
           <div>
             <label className="font-bold text-sm block mb-1">Prezzo (€)</label>
@@ -107,15 +114,19 @@ function GeneratorTab() {
           </div>
           <div>
             <label className="font-bold text-sm block mb-1">Brand</label>
-            {/* INPUT DI TESTO SEMPLICE */}
-            <input 
-              type="text" 
-              className="w-full border p-2 rounded" 
-              value={form.brand} 
-              onChange={e => setForm({...form, brand: e.target.value})} 
-              placeholder="Es. Samsung, BenQ..." 
-            />
+            <input type="text" className="w-full border p-2 rounded" value={form.brand} onChange={e => setForm({...form, brand: e.target.value})} placeholder="Es. Samsung" />
           </div>
+          
+          {/* NUOVI INPUT */}
+          <div>
+            <label className="font-bold text-sm block mb-1">Pollici (es. 27)</label>
+            <input className="w-full border p-2 rounded" value={form.screenSize} onChange={e => setForm({...form, screenSize: e.target.value})} placeholder='27' />
+          </div>
+          <div className="col-span-2">
+            <label className="font-bold text-sm block mb-1">Risoluzione (es. 1440p)</label>
+            <input className="w-full border p-2 rounded" value={form.resolution} onChange={e => setForm({...form, resolution: e.target.value})} placeholder='2560x1440 (2K)' />
+          </div>
+
           <div className="col-span-3">
              <label className="font-bold text-sm block mb-1">Categoria</label>
              <select className="w-full border p-2 rounded" value={form.category} onChange={e => setForm({...form, category: e.target.value})}>
@@ -139,7 +150,76 @@ function GeneratorTab() {
   )
 }
 
-/* --- TAB 2: SETTINGS (Tracciamento & SEO) --- */
+/* --- TAB 2: POST MANUALE (NUOVA - Per Articoli Pillar) --- */
+function ManualPostTab() {
+  const [form, setForm] = useState({ title: '', slug: '', content: '', image: '', desc: '', password: '' })
+  const [status, setStatus] = useState('')
+
+  const handleSave = async () => {
+    if (!form.password) { setStatus('Inserisci Password'); return }
+    setStatus('Salvataggio...')
+
+    const finalSlug = form.slug || form.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
+
+    // Inserimento con show_in_finder: false
+    const { error } = await supabase.from('posts').insert({
+      title: form.title,
+      slug: finalSlug,
+      content: form.content, 
+      meta_description: form.desc,
+      image_url: form.image,
+      is_published: true,
+      show_in_finder: false, // QUESTO POST NON APPARE NEL FINDER
+      category: 'Articolo',
+      // Valori dummy per evitare errori DB su campi not null
+      price: 0, hertz: 0, brand: 'Redazione' 
+    })
+
+    if (error) setStatus(`Errore: ${error.message}`)
+    else {
+      setStatus('✅ Articolo Manuale Pubblicato!')
+      // Reset form tranne password
+      setForm({ title: '', slug: '', content: '', image: '', desc: '', password: form.password })
+    }
+  }
+
+  return (
+    <div className="max-w-4xl bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+      <h2 className="text-2xl font-bold mb-6 text-slate-800 flex items-center gap-2">
+        <FileText className="text-green-600"/> Post Manuale (No AI)
+      </h2>
+      <p className="text-sm text-slate-500 mb-6 border-b pb-4">
+        Usa questo form per guide d'acquisto, confronti o articoli informativi. 
+        Questi articoli saranno visibili nel Blog ma <strong>NON</strong> nei filtri del Finder.
+      </p>
+      
+      <div className="space-y-4">
+        <div><label className="font-bold text-sm">Password Admin</label><input type="password" className="w-full border p-3 rounded bg-slate-50" value={form.password} onChange={e => setForm({...form, password: e.target.value})} /></div>
+        
+        <div className="grid grid-cols-2 gap-4">
+           <div><label className="font-bold text-sm">Titolo H1</label><input className="w-full border p-3 rounded" value={form.title} onChange={e => setForm({...form, title: e.target.value})} /></div>
+           <div><label className="font-bold text-sm">Slug (Opzionale)</label><input className="w-full border p-3 rounded" value={form.slug} onChange={e => setForm({...form, slug: e.target.value})} placeholder="titolo-articolo" /></div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+           <div><label className="font-bold text-sm">URL Immagine Copertina</label><input className="w-full border p-3 rounded" value={form.image} onChange={e => setForm({...form, image: e.target.value})} /></div>
+           <div><label className="font-bold text-sm">Meta Descrizione (SEO)</label><input className="w-full border p-3 rounded" value={form.desc} onChange={e => setForm({...form, desc: e.target.value})} /></div>
+        </div>
+
+        <div>
+           <label className="font-bold text-sm">Contenuto HTML</label>
+           <p className="text-xs text-slate-400 mb-1">Scrivi qui l'articolo in HTML. Usa {'<h2>, <p>, <ul>, <a href="...">'} liberamente.</p>
+           <textarea className="w-full border p-3 rounded h-96 font-mono text-sm" value={form.content} onChange={e => setForm({...form, content: e.target.value})} placeholder="<h2>Introduzione</h2><p>Testo...</p>" />
+        </div>
+
+        <Button onClick={handleSave} className="w-full bg-green-600 hover:bg-green-700 text-white py-4 font-bold text-lg shadow-md">Pubblica Articolo Manuale</Button>
+        {status && <p className="text-center font-bold mt-4 p-2 bg-slate-50 rounded">{status}</p>}
+      </div>
+    </div>
+  )
+}
+
+/* --- TAB 3: SETTINGS (Tracciamento & SEO) --- */
 function SettingsTab() {
   const [settings, setSettings] = useState({ ga_id: '', clarity_id: '', fb_pixel: '', gsc_code: '' })
   const [password, setPassword] = useState('')
@@ -219,7 +299,7 @@ function SettingsTab() {
   )
 }
 
-/* --- TAB 3: COMMENTI (Moderazione) --- */
+/* --- TAB 4: COMMENTI (Moderazione) --- */
 function CommentsTab() {
   const [comments, setComments] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -302,7 +382,7 @@ function CommentsTab() {
   )
 }
 
-/* --- TAB 4: PAGINE LEGALI (Editor HTML Semplice) --- */
+/* --- TAB 5: PAGINE LEGALI (Editor HTML Semplice) --- */
 function LegalTab() {
   const [pages, setPages] = useState({ legal_privacy: '', legal_terms: '', legal_disclosure: '' })
   const [password, setPassword] = useState('')
