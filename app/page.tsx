@@ -10,6 +10,7 @@ export default async function Homepage() {
     .from('posts')
     .select('id, title, slug, image_url, price, hertz, category')
     .eq('is_published', true)
+    .eq('show_in_finder', true)
     .order('created_at', { ascending: false })
     .limit(5)
 
