@@ -2,22 +2,26 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/Button'
-import { Settings, MessageSquare, PenTool, Check, Save, Trash2, Scale, Monitor, Zap, FileText } from 'lucide-react'
+import { Settings, MessageSquare, PenTool, Check, Save, Trash2, Scale, Monitor, Zap, FileText, List, ExternalLink } from 'lucide-react'
 
 // --- COMPONENTE PRINCIPALE ---
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<'generator' | 'manual' | 'settings' | 'comments' | 'legal'>('generator')
+  const [activeTab, setActiveTab] = useState<'generator' | 'manual' | 'manager' | 'settings' | 'comments' | 'legal'>('generator')
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col md:flex-row">
       {/* Sidebar */}
-      <aside className="w-full md:w-64 bg-slate-900 text-white p-6 sticky top-0 h-screen overflow-y-auto">
+      <aside className="w-full md:w-64 bg-slate-900 text-white p-6 sticky top-0 h-screen overflow-y-auto z-10">
         <h2 className="text-2xl font-bold mb-8 text-blue-400 flex items-center gap-2">
           <Monitor size={24}/> Admin
         </h2>
-        <nav className="flex md:flex-col gap-3">
+        <nav className="flex flex-col gap-3">
+          <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-2 mb-1">Content</div>
           <SidebarBtn active={activeTab === 'generator'} onClick={() => setActiveTab('generator')} icon={<Zap size={20}/>} label="Generatore AI" />
           <SidebarBtn active={activeTab === 'manual'} onClick={() => setActiveTab('manual')} icon={<FileText size={20}/>} label="Post Manuale" />
+          <SidebarBtn active={activeTab === 'manager'} onClick={() => setActiveTab('manager')} icon={<List size={20}/>} label="Gestione Post" />
+          
+          <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-6 mb-1">System</div>
           <SidebarBtn active={activeTab === 'comments'} onClick={() => setActiveTab('comments')} icon={<MessageSquare size={20}/>} label="Commenti" />
           <SidebarBtn active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} icon={<Settings size={20}/>} label="Impostazioni" />
           <SidebarBtn active={activeTab === 'legal'} onClick={() => setActiveTab('legal')} icon={<Scale size={20}/>} label="Legal" />
@@ -28,6 +32,7 @@ export default function AdminDashboard() {
       <main className="flex-1 p-4 md:p-8 overflow-y-auto">
         {activeTab === 'generator' && <GeneratorTab />}
         {activeTab === 'manual' && <ManualPostTab />}
+        {activeTab === 'manager' && <PostsManagerTab />}
         {activeTab === 'settings' && <SettingsTab />}
         {activeTab === 'comments' && <CommentsTab />}
         {activeTab === 'legal' && <LegalTab />}
@@ -44,12 +49,12 @@ function SidebarBtn({ active, onClick, icon, label }: any) {
   )
 }
 
-/* --- TAB 1: GENERATORE AI (Aggiornato con Filtri Pollici/Risoluzione) --- */
+/* --- TAB 1: GENERATORE AI (Monitor) --- */
 function GeneratorTab() {
   const [form, setForm] = useState({ 
     title: '', features: '', link: '', imgUrl: '', password: '',
     price: '', brand: '', hertz: '', category: 'Gaming',
-    screenSize: '', resolution: '' // NUOVI CAMPI
+    screenSize: '', resolution: '' 
   })
   const [status, setStatus] = useState('')
 
@@ -68,14 +73,13 @@ function GeneratorTab() {
           brand: form.brand, 
           hertz: Number(form.hertz), 
           category: form.category,
-          screenSize: form.screenSize, // INVIATI ALL'API
+          screenSize: form.screenSize, 
           resolution: form.resolution 
         })
       })
       const data = await res.json()
       if (data.success) {
         setStatus('✅ Recensione generata e monitor indicizzato!')
-        // Reset dei campi (mantengo password e categoria per comodità)
         setForm(prev => ({ 
           ...prev, title: '', features: '', link: '', imgUrl: '', 
           price: '', hertz: '', brand: '', screenSize: '', resolution: '' 
@@ -150,7 +154,7 @@ function GeneratorTab() {
   )
 }
 
-/* --- TAB 2: POST MANUALE (NUOVA - Per Articoli Pillar) --- */
+/* --- TAB 2: POST MANUALE (No AI - Pillar Content) --- */
 function ManualPostTab() {
   const [form, setForm] = useState({ title: '', slug: '', content: '', image: '', desc: '', password: '' })
   const [status, setStatus] = useState('')
@@ -161,7 +165,6 @@ function ManualPostTab() {
 
     const finalSlug = form.slug || form.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
 
-    // Inserimento con show_in_finder: false
     const { error } = await supabase.from('posts').insert({
       title: form.title,
       slug: finalSlug,
@@ -169,16 +172,15 @@ function ManualPostTab() {
       meta_description: form.desc,
       image_url: form.image,
       is_published: true,
-      show_in_finder: false, // QUESTO POST NON APPARE NEL FINDER
+      show_in_finder: false, // Hidden from finder
       category: 'Articolo',
-      // Valori dummy per evitare errori DB su campi not null
+      // Dummy values
       price: 0, hertz: 0, brand: 'Redazione' 
     })
 
     if (error) setStatus(`Errore: ${error.message}`)
     else {
       setStatus('✅ Articolo Manuale Pubblicato!')
-      // Reset form tranne password
       setForm({ title: '', slug: '', content: '', image: '', desc: '', password: form.password })
     }
   }
@@ -189,7 +191,7 @@ function ManualPostTab() {
         <FileText className="text-green-600"/> Post Manuale (No AI)
       </h2>
       <p className="text-sm text-slate-500 mb-6 border-b pb-4">
-        Usa questo form per guide d'acquisto, confronti o articoli informativi. 
+        Usa questo form per guide d'acquisto o confronti manuali. 
         Questi articoli saranno visibili nel Blog ma <strong>NON</strong> nei filtri del Finder.
       </p>
       
@@ -219,7 +221,127 @@ function ManualPostTab() {
   )
 }
 
-/* --- TAB 3: SETTINGS (Tracciamento & SEO) --- */
+/* --- TAB 3: GESTIONE RAPIDA POST (Update Vecchi Post) --- */
+function PostsManagerTab() {
+  const [posts, setPosts] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [updates, setUpdates] = useState<{[key: string]: any}>({})
+  const [password, setPassword] = useState('')
+
+  const fetchPosts = async () => {
+    setLoading(true)
+    const { data } = await supabase
+      .from('posts')
+      .select('id, title, price, brand, screen_size, resolution, show_in_finder, is_published')
+      .order('created_at', { ascending: false })
+    
+    if (data) setPosts(data)
+    setLoading(false)
+  }
+
+  useEffect(() => { fetchPosts() }, [])
+
+  const handleChange = (id: string, field: string, value: any) => {
+    setUpdates(prev => ({
+      ...prev,
+      [id]: { ...prev[id], [field]: value }
+    }))
+  }
+
+  const handleSaveRow = async (id: string) => {
+    if (!password) { alert("Inserisci password admin in alto"); return; }
+    const changes = updates[id]
+    if (!changes) return;
+    const { error } = await supabase.from('posts').update(changes).eq('id', id)
+    if (error) alert("Errore: " + error.message)
+    else {
+      const newUpdates = { ...updates }
+      delete newUpdates[id]
+      setUpdates(newUpdates)
+      fetchPosts()
+      alert("Salvato!")
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Eliminare definitivamente?")) return;
+    if (!password) { alert("Inserisci password admin"); return; }
+    await supabase.from('posts').delete().eq('id', id)
+    fetchPosts()
+  }
+
+  return (
+    <div className="max-w-6xl bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+       <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+            <List className="text-blue-600"/> Gestione Rapida Post
+        </h2>
+        <input 
+            type="password" 
+            placeholder="Password Admin (richiesta per salvare)" 
+            className="border p-2 rounded w-64 text-sm bg-red-50 border-red-200"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+        />
+      </div>
+
+      {loading ? <p>Caricamento...</p> : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b">
+              <tr>
+                <th className="px-4 py-3">Titolo</th>
+                <th className="px-4 py-3">Pollici</th>
+                <th className="px-4 py-3">Risoluzione</th>
+                <th className="px-4 py-3">Prezzo (€)</th>
+                <th className="px-4 py-3 text-center">Finder?</th>
+                <th className="px-4 py-3 text-right">Azioni</th>
+              </tr>
+            </thead>
+            <tbody>
+              {posts.map(post => {
+                const changes = updates[post.id] || {}
+                const screenSize = changes.screen_size !== undefined ? changes.screen_size : post.screen_size
+                const resolution = changes.resolution !== undefined ? changes.resolution : post.resolution
+                const price = changes.price !== undefined ? changes.price : post.price
+                const showInFinder = changes.show_in_finder !== undefined ? changes.show_in_finder : post.show_in_finder
+                const isModified = Object.keys(changes).length > 0
+
+                return (
+                  <tr key={post.id} className="border-b hover:bg-slate-50">
+                    <td className="px-4 py-3 font-medium text-slate-900 max-w-xs truncate" title={post.title}>
+                        {post.title.replace('Recensione', '')}
+                    </td>
+                    <td className="px-4 py-3">
+                        <input className="w-16 border rounded p-1 text-center" value={screenSize || ''} onChange={e => handleChange(post.id, 'screen_size', e.target.value)} placeholder='27'/>
+                    </td>
+                    <td className="px-4 py-3">
+                        <input className="w-24 border rounded p-1 text-center" value={resolution || ''} onChange={e => handleChange(post.id, 'resolution', e.target.value)} placeholder='1440p'/>
+                    </td>
+                    <td className="px-4 py-3">
+                        <input type="number" className="w-20 border rounded p-1 text-center" value={price || 0} onChange={e => handleChange(post.id, 'price', Number(e.target.value))}/>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                        <input type="checkbox" checked={showInFinder} onChange={e => handleChange(post.id, 'show_in_finder', e.target.checked)} className="w-4 h-4 accent-blue-600 cursor-pointer"/>
+                    </td>
+                    <td className="px-4 py-3 text-right flex justify-end gap-2">
+                        {isModified && (
+                            <button onClick={() => handleSaveRow(post.id)} className="bg-green-600 text-white p-1.5 rounded hover:bg-green-700" title="Salva"><Save size={16}/></button>
+                        )}
+                        <button onClick={() => handleDelete(post.id)} className="text-red-400 hover:text-red-600 p-1.5" title="Elimina"><Trash2 size={16}/></button>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* --- TAB 4: SETTINGS --- */
 function SettingsTab() {
   const [settings, setSettings] = useState({ ga_id: '', clarity_id: '', fb_pixel: '', gsc_code: '' })
   const [password, setPassword] = useState('')
@@ -241,7 +363,6 @@ function SettingsTab() {
     if (!password) { setMsg('❌ Inserisci la Password Admin in basso'); return; }
     setMsg('Salvataggio in corso...')
     
-    // Convertiamo l'oggetto settings in array chiave-valore per l'API
     const payload = Object.entries(settings).map(([key, value]) => ({ key, value }))
 
     try {
@@ -299,7 +420,7 @@ function SettingsTab() {
   )
 }
 
-/* --- TAB 4: COMMENTI (Moderazione) --- */
+/* --- TAB 5: COMMENTI --- */
 function CommentsTab() {
   const [comments, setComments] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -382,7 +503,7 @@ function CommentsTab() {
   )
 }
 
-/* --- TAB 5: PAGINE LEGALI (Editor HTML Semplice) --- */
+/* --- TAB 6: LEGAL --- */
 function LegalTab() {
   const [pages, setPages] = useState({ legal_privacy: '', legal_terms: '', legal_disclosure: '' })
   const [password, setPassword] = useState('')
