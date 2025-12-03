@@ -11,12 +11,10 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   
   if (!post) return { title: 'Articolo non trovato' }
 
-  // Pulizia titolo (rimuove "Recensione:" se presente nel DB per evitare ripetizioni)
+  // Pulizia titolo
   const cleanTitle = post.title.replace('Recensione:', '').trim(); 
   
   // Costruzione Title Tag Ottimizzato
-  // Se è un prodotto: "LG 27GN800: Recensione, Specifiche e Prezzo | Monitor Finder"
-  // Se è un articolo manuale: "I migliori monitor 2024 | Monitor Finder"
   const seoTitle = post.show_in_finder 
     ? `${cleanTitle}: Recensione, Specifiche e Prezzo | Monitor Finder`
     : `${cleanTitle} | Monitor Finder`; 
@@ -46,6 +44,9 @@ export default async function BlogPost({ params }: { params: { slug: string } })
 
   if (!post) notFound()
 
+  // --- FIX: Definiamo cleanTitle anche qui per usarlo nell'HTML e nel JSON-LD ---
+  const cleanTitle = post.title.replace('Recensione:', '').trim();
+  
   // Flag per capire se è un prodotto o un articolo manuale
   const isProduct = post.show_in_finder 
 
@@ -63,7 +64,7 @@ export default async function BlogPost({ params }: { params: { slug: string } })
             </span>
             
             <h1 className="text-3xl md:text-5xl font-black text-slate-900 leading-tight">
-              {post.title.replace('Recensione:', '').trim()}
+              {cleanTitle}
             </h1>
 
             {/* TECH GRID (Visibile solo se è un Prodotto) */}
@@ -119,7 +120,7 @@ export default async function BlogPost({ params }: { params: { slug: string } })
 
       {/* CONTENUTO ARTICOLO */}
       <div className="max-w-4xl mx-auto px-4 py-12">
-        <ShareButtons slug={post.slug} title={post.title} />
+        <ShareButtons slug={post.slug} title={cleanTitle} />
 
         <div className="prose prose-lg prose-slate max-w-none 
           prose-headings:font-bold prose-headings:text-slate-900 
@@ -157,7 +158,7 @@ export default async function BlogPost({ params }: { params: { slug: string } })
             __html: JSON.stringify({
             "@context": "https://schema.org/",
             "@type": isProduct ? "Product" : "Article",
-            "name": cleanTitle,
+            "name": cleanTitle, // Ora cleanTitle è definito!
             "image": post.image_url,
             "description": post.meta_description,
             ...(isProduct && {
