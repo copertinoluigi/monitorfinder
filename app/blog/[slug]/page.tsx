@@ -5,37 +5,58 @@ import Image from 'next/image'
 import { ShoppingCart, Zap, Monitor, Maximize, Grid, CheckCircle2 } from 'lucide-react'
 import ShareButtons from '@/components/features/ShareButtons'
 
+// 1. METADATA GENERATION (SEO CHIRURGICA)
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const { data: post } = await supabase.from('posts').select('*').eq('slug', params.slug).single()
+  
   if (!post) return { title: 'Articolo non trovato' }
+
+  // Pulizia titolo (rimuove "Recensione:" se presente nel DB per evitare ripetizioni)
+  const cleanTitle = post.title.replace('Recensione:', '').trim(); 
+  
+  // Costruzione Title Tag Ottimizzato
+  // Se è un prodotto: "LG 27GN800: Recensione, Specifiche e Prezzo | Monitor Finder"
+  // Se è un articolo manuale: "I migliori monitor 2024 | Monitor Finder"
+  const seoTitle = post.show_in_finder 
+    ? `${cleanTitle}: Recensione, Specifiche e Prezzo | Monitor Finder`
+    : `${cleanTitle} | Monitor Finder`; 
+
   return {
-    title: `${post.title} | Monitor Finder`,
+    title: seoTitle,
     description: post.meta_description,
     openGraph: {
-      title: post.title,
+      title: seoTitle,
       description: post.meta_description,
       type: 'article',
+      url: `https://monitorfinder.it/blog/${post.slug}`,
       images: post.image_url ? [post.image_url] : []
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: seoTitle,
+      description: post.meta_description,
+      images: post.image_url ? [post.image_url] : [],
     }
   }
 }
 
+// 2. COMPONENTE PAGINA (DESIGN PRO)
 export default async function BlogPost({ params }: { params: { slug: string } }) {
   const { data: post } = await supabase.from('posts').select('*').eq('slug', params.slug).single()
 
   if (!post) notFound()
 
-  // Se 'show_in_finder' è true, è un prodotto. Altrimenti è un articolo manuale.
+  // Flag per capire se è un prodotto o un articolo manuale
   const isProduct = post.show_in_finder 
 
   return (
     <article className="min-h-screen bg-white">
       
-      {/* 1. HEADER HERO SECTION (DESIGN PRO) */}
+      {/* HERO SECTION CON DATI TECNICI */}
       <div className="bg-slate-50 border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-4 py-12 md:py-20 flex flex-col md:flex-row items-center gap-12">
           
-          {/* SX: Testo e Dati */}
+          {/* COLONNA SX: Testo, Dati e CTA */}
           <div className="flex-1 space-y-6">
             <span className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
                {post.category || 'Recensione'}
@@ -45,7 +66,7 @@ export default async function BlogPost({ params }: { params: { slug: string } })
               {post.title.replace('Recensione:', '').trim()}
             </h1>
 
-            {/* TECH GRID (Solo se è un Prodotto) */}
+            {/* TECH GRID (Visibile solo se è un Prodotto) */}
             {isProduct && (
               <div className="grid grid-cols-2 gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm max-w-md">
                  <div className="flex items-center gap-3">
@@ -67,7 +88,7 @@ export default async function BlogPost({ params }: { params: { slug: string } })
               </div>
             )}
 
-            {/* TOP CTA (Richiesta Punto 2) */}
+            {/* CTA TOP (Per conversione immediata) */}
             {post.amazon_link && (
                 <div className="pt-4">
                     <a href={post.amazon_link} target="_blank" rel="nofollow sponsored" className="inline-flex items-center gap-2 bg-[#FF9900] hover:bg-[#ff8c00] text-slate-900 font-bold px-6 py-3 rounded-xl shadow-md transition transform hover:scale-105">
@@ -78,7 +99,7 @@ export default async function BlogPost({ params }: { params: { slug: string } })
             )}
           </div>
 
-          {/* DX: Immagine Grande */}
+          {/* COLONNA DX: Immagine Grande */}
           <div className="flex-1 w-full flex justify-center">
              <div className="relative w-full aspect-[4/3] max-w-md bg-white rounded-2xl shadow-2xl border border-slate-100 p-6 flex items-center justify-center">
                 {post.image_url ? (
@@ -96,7 +117,7 @@ export default async function BlogPost({ params }: { params: { slug: string } })
         </div>
       </div>
 
-      {/* 2. BODY ARTICOLO */}
+      {/* CONTENUTO ARTICOLO */}
       <div className="max-w-4xl mx-auto px-4 py-12">
         <ShareButtons slug={post.slug} title={post.title} />
 
@@ -109,7 +130,7 @@ export default async function BlogPost({ params }: { params: { slug: string } })
           <div dangerouslySetInnerHTML={{ __html: post.content }} />
         </div>
 
-        {/* CTA BOTTOM (Rimane) */}
+        {/* CTA BOTTOM (Recap finale) */}
         {post.amazon_link && (
           <div className="mt-16 p-8 bg-slate-900 rounded-2xl text-center shadow-xl text-white">
             <h3 className="text-2xl font-bold mb-4">Verdetto Finale</h3>
@@ -129,14 +150,14 @@ export default async function BlogPost({ params }: { params: { slug: string } })
         )}
       </div>
 
-      {/* SCHEMA MARKUP */}
+      {/* DATI STRUTTURATI (SCHEMA MARKUP PER GOOGLE) */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
             __html: JSON.stringify({
             "@context": "https://schema.org/",
             "@type": isProduct ? "Product" : "Article",
-            "name": post.title.replace('Recensione:', '').trim(),
+            "name": cleanTitle,
             "image": post.image_url,
             "description": post.meta_description,
             ...(isProduct && {
