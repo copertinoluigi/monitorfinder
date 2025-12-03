@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { revalidatePath } from 'next/cache'
 
-// Funzione helper per il modello (invariata, funziona bene)
+// ... (funzione getDynamicModel invariata) ...
 async function getDynamicModel(apiKey: string) {
   try {
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
@@ -34,96 +34,76 @@ export async function POST(req: Request) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: modelName });
 
-    // 1. Leggi nuovi dati Monitor
     const body = await req.json()
-    // Notare il cambio variabili: brand, hertz
-    const { productTitle, features, amazonLink, image, price, brand, hertz, category } = body
+    // NUOVI CAMPI: screenSize, resolution
+    const { productTitle, features, amazonLink, image, price, brand, hertz, category, screenSize, resolution } = body
 
     if (!productTitle) return NextResponse.json({ error: "Manca Titolo" }, { status: 400 })
 
-    console.log(`🤖 Generazione Tech Review avviata per: ${productTitle}`);
-
-    // 2. Prompt Tech/Gaming Ottimizzato
     const prompt = `
-      Sei un esperto recensore di hardware e periferiche da gaming (stile TechRadar o Rtings). 
-      Scrivi una recensione tecnica in HTML (usa tag h2, p, ul, li) per il monitor: ${productTitle}.
+      Sei un esperto recensore tech. Scrivi una recensione HTML per il monitor: ${productTitle}.
       
-      Dati tecnici noti:
+      Specifiche Tecniche:
       - Brand: ${brand}
+      - Dimensioni: ${screenSize} pollici
+      - Risoluzione: ${resolution}
       - Refresh Rate: ${hertz}Hz
-      - Categoria: ${category}
-      - Caratteristiche grezze: ${features}
+      - Features grezze: ${features}
       
-      Struttura richiesta:
-      <h2>Panoramica</h2>
-      <p>Introduzione accattivante. Specifica subito se è adatto per Gaming Competitivo (alti Hz), Ufficio o Content Creation.</p>
-      
-      <h2>Qualità del Pannello e Performance</h2>
-      <p>Analizza i dati tecnici. Parla dell'importanza dei ${hertz}Hz per la fluidità. Menziona ipotetici vantaggi su ghosting o colori basandoti sulla fascia di prezzo e brand.</p>
-      
-      <h2>Specifiche Chiave</h2>
-      <ul><li>Crea un elenco puntato delle specifiche più rilevanti (risoluzione stimata, refresh rate, porte, ergonomia).</li></ul>
-      
-      <h2>Per chi è consigliato?</h2>
-      <p>Dì chiaramente chi dovrebbe comprarlo (es. "Gamers PS5/PC", "Professionisti", "Studenti").</p>
-      
+      Struttura HTML richiesta (usa h2, p, ul, li):
+      <h2>Introduzione</h2>
+      <p>Panoramica veloce.</p>
+      <h2>Qualità del Display</h2>
+      <p>Parla della risoluzione ${resolution} su uno schermo da ${screenSize}".</p>
+      <h2>Performance Gaming/Ufficio</h2>
+      <p>Analizza i ${hertz}Hz.</p>
       <h2>Verdetto</h2>
-      <p>Conclusione sintetica. Vale il prezzo?</p>
+      <p>Conclusione.</p>
       
-      NOTA: 
-      - Non inventare specifiche tecniche inesistenti se non sei sicuro, rimani sul generico lodando il brand ${brand} se mancano dettagli.
-      - Non inserire link o bottoni nel testo.
+      NOTA: Non inserire link o bottoni.
     `
 
     const result = await model.generateContent(prompt);
     let content = result.response.text();
 
-    // 3. Pulizia Output (Stessa logica robusta del vecchio file)
+    // Pulizia markdown
     const codeBlockMatch = content.match(/```(?:html)?([\s\S]*?)```/);
-    if (codeBlockMatch && codeBlockMatch[1]) {
-      content = codeBlockMatch[1].trim();
-    } else {
-      content = content
-        .replace(/^Here is the HTML.*:/i, '')
-        .replace(/^Ecco il codice HTML.*:/i, '')
-        .replace(/^Ecco la recensione.*:/i, '')
-        .trim();
-    }
+    if (codeBlockMatch && codeBlockMatch[1]) content = codeBlockMatch[1].trim();
 
-    // 4. Genera Slug
+    // Slug
     const slug = productTitle.toLowerCase().trim()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)+/g, '') + '-' + Date.now().toString().slice(-4);
 
-    // 5. Salva nel DB (Tabella posts o monitors)
-    // Assumiamo che tu stia usando la tabella 'posts' ma con colonne aggiornate
+    // Salvataggio con nuovi campi
     const { error } = await supabaseAdmin
       .from('posts') 
       .insert({
-        title: `Recensione ${productTitle} - ${hertz}Hz`,
+        title: `Recensione ${productTitle}`,
         slug: slug,
         content: content,
-        meta_description: `Recensione del monitor ${productTitle}. ${hertz}Hz, Brand: ${brand}. Prezzo e opinioni.`,
+        meta_description: `Recensione ${productTitle}. ${screenSize}", ${resolution}, ${hertz}Hz.`,
         is_published: true,
         amazon_link: amazonLink,
         image_url: image,
-        
-        // NUOVE COLONNE MAPPATE
         price: price || 0,
-        brand: brand || 'Generico', // Sostituisce rooms
-        hertz: hertz || 60,         // Sostituisce sqm
-        category: category || 'Monitor'
+        brand: brand || 'Generico',
+        hertz: hertz || 60,
+        category: category || 'Monitor',
+        // NUOVI
+        screen_size: screenSize || '',
+        resolution: resolution || '',
+        show_in_finder: true // I post AI vanno nel finder
       })
 
     if (error) throw error;
 
     revalidatePath('/blog');
-    revalidatePath('/finder'); // Assumo che la pagina finder si chiami così
+    revalidatePath('/finder');
 
-    return NextResponse.json({ success: true, slug, modelUsed: modelName })
+    return NextResponse.json({ success: true, slug })
 
   } catch (error: any) {
-    console.error("🔥 ERRORE API:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
 }
